@@ -1,9 +1,11 @@
 export class GoogleLoginPage {
   constructor(page) {
-    // this.page = googlePage;
     this.page=page;
-// this.continueWithGoogleBtn = page.getByRole('button', {name: 'Continue with Google',});
-    this.continueWithGoogleBtn = page.getByRole('button', { name: 'Google' });
+    this.googleButtons = [
+                          page.getByRole('button', { name: 'Continue with Google' }),
+                          page.getByRole('button', { name: 'Google' }),
+                          page.getByRole('button', { name: 'Sign in with Google' }) // added more variants if required
+                        ];
     this.emailTxt = this.page.locator('input#identifierId, input[name="identifier"], input[type="email"]');
     this.passwordTxt = this.page.locator('input[type="password"]:not([aria-hidden])').first();
     this.nextBtn = this.page.getByRole('button', { name: /Next/i });
@@ -11,8 +13,18 @@ export class GoogleLoginPage {
   }
 
   async clickContinueWithGoogle() {
-    // Try to handle both cases: a new popup page or a same-page redirect.
-    const clickPromise = this.continueWithGoogleBtn.click();
+    let buttonFound = null;
+    for (const btn of this.googleButtons) {
+      if (await btn.isVisible().catch(() => false)) {
+        buttonFound = btn;
+        break;
+      }
+    }
+  if (!buttonFound) {
+    throw new Error('No Google button found');
+  }
+
+  const clickPromise = buttonFound.click();
 
     try {
       const googlePage = await this.page.context().waitForEvent('page', { timeout: 10000 });
